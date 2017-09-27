@@ -40,6 +40,12 @@ PARSER.add_argument(
         'Turn on dry run mode. No address will be assigned,\n'
         'we will only print which we whould take'))
 PARSER.add_argument(
+    '--allow-reassociation',
+    action='store_true',
+    help='Specify this option to allow an Elastic IP address that is\n'
+         'already associated with another network interface or instance\n'
+         'to be re-associated with the specified instance or interface')
+PARSER.add_argument(
     '--valid-ips',
     help=(
         'A comma separated list of valid Elastic IPs.\nYou can use CIDR '

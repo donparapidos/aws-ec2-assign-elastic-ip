@@ -58,7 +58,11 @@ def main():
 
     # Get an unassigned Elastic IP
     address = _get_unassociated_address()
-
+    
+    # Get first assigned Elastic IP if there were no available unassigned IPs
+    if not address and args.allow_reassociation:
+        address = _get_first_address()
+    
     # Exit if there were no available Elastic IPs
     if not address:
         sys.exit(1)
@@ -67,10 +71,10 @@ def main():
     if args.dry_run:
         logger.info('Would assign IP {0}'.format(address.public_ip))
     else:
-        _assign_address(instance_id, address)
+        _assign_address(instance_id, address, args.allow_reassociation)
 
 
-def _assign_address(instance_id, address):
+def _assign_address(instance_id, address, allow_reassociation):
     """ Assign an address to the given instance ID
 
     :type instance_id: str
@@ -88,12 +92,14 @@ def _assign_address(instance_id, address):
             # EC2 classic association
             connection.associate_address(
                 instance_id,
-                public_ip=address.public_ip)
+                public_ip=address.public_ip,
+                allow_reassociation=allow_reassociation)
         else:
             # EC2 VPC association
             connection.associate_address(
                 instance_id,
-                allocation_id=address.allocation_id)
+                allocation_id=address.allocation_id,
+                allow_reassociation=allow_reassociation)
     except Exception as error:
         logger.error('Failed to associate {0} with {1}. Reason: {2}'.format(
             instance_id, address.public_ip, error))
@@ -102,6 +108,30 @@ def _assign_address(instance_id, address):
     logger.info('Successfully associated Elastic IP {0} with {1}'.format(
         address.public_ip, instance_id))
 
+def _get_first_address():
+    """ Return the first EIP we can find
+
+    :returns: boto.ec2.address or None
+    """
+    eip = None
+
+    for address in connection.get_all_addresses():
+        # Check if the address is in the valid IP's list
+        if _is_valid(address.public_ip):
+            logger.debug('{0} is OK for us to take'.format(
+                address.public_ip))
+            eip = address
+            break
+
+        else:
+            logger.debug(
+                '{0} is not in the valid IPs list'.format(
+                    address.public_ip, address.instance_id))
+
+    if not eip:
+        logger.error('No Elastic IP found!')
+
+    return eip
 
 def _get_unassociated_address():
     """ Return the first unassociated EIP we can find
