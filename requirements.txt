@@ -1,2 +1,2 @@
-boto>=2.29.1
+-e git+https://github.com/donparapidos/boto#egg=boto
 netaddr>=0.7.12
