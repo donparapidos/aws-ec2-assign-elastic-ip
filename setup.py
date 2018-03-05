@@ -24,7 +24,8 @@ setup(
     scripts=['aws-ec2-assign-elastic-ip'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=['https://github.com/donparapidos/boto#egg=boto', 'netaddr >= 0.7.12'],
+    install_requires=['boto', 'netaddr >= 0.7.12'],
+    dependency_links=['https://github.com/donparapidos/boto/tarball/master#egg=boto']
     classifiers=[
         'Development Status :: 4 - Beta',
         'Environment :: Console',
